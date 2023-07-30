@@ -6,8 +6,8 @@ from django.forms.models import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Book
-from .serializers import BookSerializer
+from .models import Book, MenuItem
+from .serializers import BookSerializer, MenuItemSerializer
 from rest_framework import generics
 from rest_framework.renderers import TemplateHTMLRenderer,StaticHTMLRenderer
 from rest_framework.decorators import api_view, renderer_classes
@@ -50,3 +50,11 @@ class SingleBookView(generics.RetrieveUpdateAPIView):
 def welcome(request):
     data = '<html><body><h1>Welcome To Little Lemon API Project</h1></body></html>'
     return Response(data)
+
+class MenuItemsView(generics.ListCreateAPIView):
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer
+
+class SingleMenuItemView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer

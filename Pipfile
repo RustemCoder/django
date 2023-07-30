@@ -8,6 +8,7 @@ django = "*"
 djangorestframework = "*"
 django-debug-toolbar = "*"
 djangorestframework-csv = "*"
+bleach = "*"
 
 [dev-packages]
 
