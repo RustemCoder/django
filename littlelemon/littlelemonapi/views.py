@@ -56,3 +56,24 @@ class MenuItemsView(generics.ListCreateAPIView):
 class SingleMenuItemView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
+
+@api_view(['GET', 'POST'])
+def menu_items(request):
+    if(request.method =="POST"):
+        items = MenuItem.objects.select_related('category').all()
+        category_name = request.query_params.get('category')
+        category_name = request.query_params.get('search')
+        to_price = request.query_params.get('to_price')
+        if category_name:
+            items =  items.filter(category__title = category_name)
+        elif to_price:
+            items = items.filter(price_lte=to_price)
+        
+        if search:
+            items = items.filter(title__startswith = search)
+            serialized_item = MenuItemSerializer(items, many = True)
+    elif (request.method == "GET"):
+        items = MenuItem.objects.all()
+        serialized_item = MenuItemSerializer(items,many=True)
+    return Response(serialized_item.data)
+
