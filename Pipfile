@@ -9,6 +9,7 @@ djangorestframework = "*"
 django-debug-toolbar = "*"
 djangorestframework-csv = "*"
 bleach = "*"
+djoser = "*"
 
 [dev-packages]
 

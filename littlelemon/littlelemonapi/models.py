@@ -29,7 +29,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     delivery_crew = models.ForeignKey(MenuItem,on_delete=models.CASCADE)
     quantity = models.SmallIntegerField()
-    status = models.BooleanField(db_index = True , default=0)
+    status = models.BooleanField(db_index = True , default=1)
     total = models.DecimalField(max_digits=6,decimal_places=2)
     date = models.DateField(db_index = True)
 class OrderItem(models.Model):

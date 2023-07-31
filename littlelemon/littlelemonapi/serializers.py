@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import Book ,MenuItem
+from .models import MenuItem
 import bleach
-class BookSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields = ['id','title','author','price']
+#class BookSerializer(serializers.ModelSerializer):
+#    class Meta:
+ #       model = Book
+#        fields = ['id','title','author','price']
 
 class MenuItemSerializer(serializers.ModelSerializer):
     def validate_title(self, value):
