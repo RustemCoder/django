@@ -5,8 +5,8 @@ from django.forms.models import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import MenuItem
-from .serializers import  MenuItemSerializer
+from .models import MenuItem, Cart
+from .serializers import  MenuItemSerializer,CartItemSerializer
 from rest_framework import generics
 from rest_framework.renderers import TemplateHTMLRenderer,StaticHTMLRenderer
 from rest_framework.decorators import api_view, renderer_classes, permission_classes
@@ -59,6 +59,10 @@ class MenuItemsView(generics.ListCreateAPIView):
 class SingleMenuItemView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
+
+class CartMenuItem(generics.ListAPIView):
+    queryset = Cart.objects.all()
+    serializer_class =  CartSerializer
 
 @api_view(['GET'])
 def menu_items(request):
