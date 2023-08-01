@@ -9,7 +9,10 @@ from .models import MenuItem
 from .serializers import  MenuItemSerializer
 from rest_framework import generics
 from rest_framework.renderers import TemplateHTMLRenderer,StaticHTMLRenderer
-from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.decorators import api_view, renderer_classes, permission_classes
+from rest_framework.permissions import IsAdminUser
+from django.contrib.auth.models import User, Group
+from django.shortcuts import get_object_or_404
 # Create your views here.
 #@csrf_exempt
 #def books(request):
@@ -57,9 +60,16 @@ class SingleMenuItemView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
 
-@api_view(['GET', 'POST'])
+@api_view(['GET'])
 def menu_items(request):
-    if(request.method =="POST"):
+    items = MenuItem.objects.all()
+    serialized_item = MenuItemSerializer(items,many=True)
+    return Response(serialized_item.data)
+
+@api_view(['POST','PATCH','DELETE'])
+@permission_classes([IsAdminUser])
+def menu_items(request):
+     if(request.method =="POST"):
         items = MenuItem.objects.select_related('category').all()
         category_name = request.query_params.get('category')
         category_name = request.query_params.get('search')
@@ -72,8 +82,18 @@ def menu_items(request):
         if search:
             items = items.filter(title__startswith = search)
             serialized_item = MenuItemSerializer(items, many = True)
-    elif (request.method == "GET"):
-        items = MenuItem.objects.all()
-        serialized_item = MenuItemSerializer(items,many=True)
-    return Response(serialized_item.data)
+
+@api_view(['POST','DELETE'])
+@permission_classes([IsAdminUser])
+def managers(request):
+    username = request.data['username']
+    if username:
+        user = get_object_or_404(User, username = username)
+        managers = Group.objects.get(name="Manager")
+        if request.method == "POST":
+             managers.user_set.add(user)
+        elif request.method == "DELETE":
+            managers.user_set.remove(user)
+        return Response({"message":"ok"})
+    return Response({"message":"ok"},status.HTTP_400_BAD_REQUEST)
 
