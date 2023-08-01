@@ -16,37 +16,6 @@ from django.shortcuts import get_object_or_404
 from .custompermissions import IsCustomer, IsDeliveryCrew
 from rest_framework import status
 # Create your views here.
-#@csrf_exempt
-#def books(request):
-  #  if request.method == 'GET':
- #       books = Book.objects.all().values()
- #       return JsonResponse({"books":list(books)})
-#    elif request.method == 'POST':
- #       title = request.POST.get('title')
- #       author = request.POST.get('author')
-#        price = request.POST.get('price')
- #       book = Book(
- #           title = title,
- ##          price = price
-  #      )
- #       try:
- #           book.save()
- #       except IntegrityError:
-  #          return JsonResponse({'error':'true','message':'required field missing'},status=400)
-
-#      return JsonResponse(model_to_dict(book), status=201)
-
-#@api_view
-#def book(request):
-  #  return Response('list of books',status = status.HTTP_200_OK)
-
-#class BookView(generics.ListCreateAPIView):
-    #queryset = Book.objects.all()
-  ##  serializer_class = BookSerializer
-
-#class SingleBookView(generics.RetrieveUpdateAPIView):
-   # queryset = Book.objects.all()
-  #  serializer_class = BookSerializer
 
 @api_view(['GET'])
 @renderer_classes([StaticHTMLRenderer])
@@ -85,10 +54,10 @@ class CartMenuItemList(generics.ListAPIView):
         user = self.request.user
         return Cart.objects.filter(user=user)
 
-@permission_classes([IsAdminUser | IsCustomer])
-class CartMenuItemPost(generics.CreateAPIView):
-    queryset = MenuItem.objects.all()
-    serializer_class =  CartItemSerializer   
+class CartMenuItemPost(generics.ListCreateAPIView):
+    queryset = Cart.objects.all()
+    serializer_class =  CartItemSerializer
+    permission_classes = [IsCustomer,IsAdminUser]
 
 
 
@@ -163,4 +132,24 @@ def cart_management(request):
         my_menu_items = Cart.objects.filter(user = request.user)
         serialized_menuitems = MenuItemSerializer(my_menu_items,many = True)
         return Response("My items",{serialized_menuitems.data})
+    elif(request.method == "POST"):
+        menu_item = MenuItem.objects.get(id=request.data["menu_item"])
+        price = menu_item.price * int(request.data["quantity"])
+
+        if Cart.objects.filter(user=request.user).exists():
+            cart = Cart.objects.get(user=request.user)
+        else:
+            cart = Cart.objects.create(user=request.user, quantity=request.data["quantity"], menuitem=menu_item, unit_price=menu_item.price, price=price)
+        
+        serialized = CartItemSerializer(cart)
+        return Response(serialized.data, status=HTTP_201_CREATED)
+    elif(request.method == "DELETE"):
+        cart = Cart.objects.get(pk=2)
+        new_cart = Cart.objects.all()
+        serialized = CartItemSerializer(cart)
+        return Response(serialized.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 

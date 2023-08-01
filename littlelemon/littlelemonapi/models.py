@@ -24,6 +24,9 @@ class Cart(models.Model):
     class Meta:
         unique_together = ('menuitem','user')
 
+    def __str__():
+        return self.user+self.price
+
 
 class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

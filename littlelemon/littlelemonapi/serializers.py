@@ -28,14 +28,13 @@ class CartItemSerializer(serializers.ModelSerializer):
         return bleach.clean(value)
 
     def validate(self, attrs):
-        attrs['title'] = bleach.clean(attrs['title'])
         if(attrs['price']<2):
             raise serializers.ValidationError('Price should not be less than 2.0')
         return super().validate(attrs)
     user = serializers.StringRelatedField()
     class Meta():
         model = Cart
-        fields = ['user','menuitem','quantity','unit_price','price']
+        fields = "__all__"
         extra_kwargs = {
             "price":{"min_value":2}, 
         }
@@ -43,4 +42,4 @@ class CartItemSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
         class Meta:
             model = User
-            fields = ['username','email','first_name','last_name']
+            fields = ['id','username','email','first_name','last_name']
