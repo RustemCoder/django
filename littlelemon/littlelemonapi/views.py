@@ -13,6 +13,7 @@ from rest_framework.decorators import api_view, renderer_classes, permission_cla
 from rest_framework.permissions import IsAdminUser
 from django.contrib.auth.models import User, Group
 from django.shortcuts import get_object_or_404
+from .custompermissions import IsCustomer, IsDeliveryCrew
 # Create your views here.
 #@csrf_exempt
 #def books(request):
@@ -52,17 +53,31 @@ def welcome(request):
     data = '<html><body><h1>Welcome To Little Lemon API Project</h1></body></html>'
     return Response(data)
 
+@permission_classes([IsAdminUser])
 class MenuItemsView(generics.ListCreateAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
 
-class SingleMenuItemView(generics.RetrieveUpdateDestroyAPIView):
+@permission_classes([IsAdminUser])
+class SingleMenuItemViewUpdate(generics.UpdateAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
 
+@permission_classes([IsAdminUser])
+class SingleMenuItemViewDestroy(generics.DestroyAPIView):
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer
+
+@permission_classes([IsCustomer,IsAdminUser,IsDeliveryCrew])
+class SingleMenuItemViewRetrieve(generics.RetrieveAPIView):
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer
+
+@permission_classes([IsCustomer,IsDeliveryCrew,IsAdminUser])
 class CartMenuItem(generics.ListAPIView):
     queryset = Cart.objects.all()
-    serializer_class =  CartSerializer
+    serializer_class =  CartItemSerializer
+
 
 @api_view(['GET'])
 def menu_items(request):

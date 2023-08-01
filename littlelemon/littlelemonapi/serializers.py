@@ -14,8 +14,6 @@ class MenuItemSerializer(serializers.ModelSerializer):
         attrs['title'] = bleach.clean(attrs['title'])
         if(attrs['price']<2):
             raise serializers.ValidationError('Price should not be less than 2.0')
-        if(attrs['inventory']<0):
-            raise serializers.ValidationError('Stock cannot be negative')
         return super().validate(attrs)
     class Meta():
         model = MenuItem
