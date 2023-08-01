@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import MenuItem, Cart
-from .serializers import  MenuItemSerializer,CartItemSerializer
+from .serializers import  MenuItemSerializer,CartItemSerializer,UserSerializer
 from rest_framework import generics
 from rest_framework.renderers import TemplateHTMLRenderer,StaticHTMLRenderer
 from rest_framework.decorators import api_view, renderer_classes, permission_classes
@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAdminUser
 from django.contrib.auth.models import User, Group
 from django.shortcuts import get_object_or_404
 from .custompermissions import IsCustomer, IsDeliveryCrew
+from rest_framework import status
 # Create your views here.
 #@csrf_exempt
 #def books(request):
@@ -102,17 +103,44 @@ def menu_items(request):
             items = items.filter(title__startswith = search)
             serialized_item = MenuItemSerializer(items, many = True)
 
-@api_view(['POST','DELETE'])
+@api_view(['POST','DELETE','GET'])
 @permission_classes([IsAdminUser])
-def managers(request):
-    username = request.data['username']
-    if username:
-        user = get_object_or_404(User, username = username)
-        managers = Group.objects.get(name="Manager")
-        if request.method == "POST":
-             managers.user_set.add(user)
-        elif request.method == "DELETE":
-            managers.user_set.remove(user)
+def managers(request): 
+    if(request=="POST" or request=="DELETE"):
+        username = request.data['userid']
+        if username:
+            user = get_object_or_404(User, username = username)
+            managers = Group.objects.get(name="Manager")
+            if request.method == "POST":
+                managers.user_set.add(user)
+            elif request.method == "DELETE":
+                managers.user_set.remove(user)
+        
         return Response({"message":"ok"})
-    return Response({"message":"ok"},status.HTTP_400_BAD_REQUEST)
+    else:
+        managers = User.objects.filter(groups__name="Manager")
+        serialized_users = UserSerializer(managers,many = True)
+        return Response({"users":serialized_users.data})
+
+@api_view(['POST','DELETE','GET'])
+@permission_classes([IsAdminUser])
+def delivery_crew(request):
+    if(request.method == "GET"):
+        delivery_crew = User.objects.filter(groups__name="Delivery Crew")
+        serialized_users = UserSerializer(delivery_crew,many = True)
+        return Response({"users":serialized_users.data})
+
+    elif(request.method == "POST"):
+        username = request.data['username']
+        user = get_object_or_404(User, username = username)
+        delivery_crew = Group.objects.get(name="Delivery Crew")
+        delivery_crew.user_set.add(user)
+        return Response("Succesfully created",status = status.HTTP_201_CREATED)
+    elif(request.method == "DELETE"):
+        username = request.data['username']
+        user = get_object_or_404(User, username = username)
+        delivery_crew = Group.objects.get(name="Delivery Crew")
+        delivery_crew.user_set.remove(user)
+        return Response("Succesfully removed",status = status.HTTP_200_OK)
+
 
