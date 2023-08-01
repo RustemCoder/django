@@ -5,7 +5,7 @@ from django.forms.models import model_to_dict
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import MenuItem, Cart
+from .models import MenuItem, Cart, Order
 from .serializers import  MenuItemSerializer,CartItemSerializer,UserSerializer
 from rest_framework import generics
 from rest_framework.renderers import TemplateHTMLRenderer,StaticHTMLRenderer
@@ -74,10 +74,22 @@ class SingleMenuItemViewRetrieve(generics.RetrieveAPIView):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
 
-@permission_classes([IsCustomer,IsDeliveryCrew,IsAdminUser])
-class CartMenuItem(generics.ListAPIView):
-    queryset = Cart.objects.all()
+@permission_classes([IsAdminUser | IsCustomer])
+class CartMenuItemList(generics.ListAPIView):
     serializer_class =  CartItemSerializer
+    def get_queryset(self):
+        """
+        This view should return a list of all the cart menu items
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return Cart.objects.filter(user=user)
+
+@permission_classes([IsAdminUser | IsCustomer])
+class CartMenuItemPost(generics.CreateAPIView):
+    queryset = MenuItem.objects.all()
+    serializer_class =  CartItemSerializer   
+
 
 
 @api_view(['GET'])
@@ -143,4 +155,12 @@ def delivery_crew(request):
         delivery_crew.user_set.remove(user)
         return Response("Succesfully removed",status = status.HTTP_200_OK)
 
+
+@api_view(['POST','GET','DELETE'])
+@permission_classes([IsCustomer])
+def cart_management(request):
+    if request.method == "GET":
+        my_menu_items = Cart.objects.filter(user = request.user)
+        serialized_menuitems = MenuItemSerializer(my_menu_items,many = True)
+        return Response("My items",{serialized_menuitems.data})
 

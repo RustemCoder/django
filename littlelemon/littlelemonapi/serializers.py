@@ -32,6 +32,7 @@ class CartItemSerializer(serializers.ModelSerializer):
         if(attrs['price']<2):
             raise serializers.ValidationError('Price should not be less than 2.0')
         return super().validate(attrs)
+    user = serializers.StringRelatedField()
     class Meta():
         model = Cart
         fields = ['user','menuitem','quantity','unit_price','price']
