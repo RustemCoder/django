@@ -15,6 +15,7 @@ from django.contrib.auth.models import User, Group
 from django.shortcuts import get_object_or_404
 from .custompermissions import IsCustomer, IsDeliveryCrew
 from rest_framework import status
+import datetime
 # Create your views here.
 
 @api_view(['GET'])
@@ -144,18 +145,32 @@ def cart_management(request):
         serialized = CartItemSerializer(cart)
         return Response(serialized.data, status=HTTP_201_CREATED)
     elif(request.method == "DELETE"):
-        cart = Cart.objects.get(pk=2)
-        new_cart = Cart.objects.all()
+        cart = Cart.objects.filter(user = request.user)
+        cart.delete()
         serialized = CartItemSerializer(cart)
         return Response(serialized.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(["GET"])
+@api_view(["GET","POST"])
 @permission_classes([IsCustomer])
 def customer_orders(request):
-    orders = Order.objects.filter(user = request.user)
-    serialized = OrderSerializer(orders,many = True)
-    return Response(serialized.data,status=status.HTTP_200_OK)
+    if(request.method == "GET"):
+        orders = Order.objects.filter(user = request.user)
+        serialized = OrderSerializer(orders,many = True)
+        return Response(serialized.data,status=status.HTTP_200_OK)
+    elif(request.method == "POST"):
+        cart = Cart.objects.filter(user = request.user)
+        total = 0
+        quantity = 0
+        for item in cart:
+            total += cart["price"]
+            quantity += cart["price"]
+        
+        order = Order.objects.create(user = request.user,quantity = quantity,status = 1 ,total = total, date = datetime.datetime.now(),delivery_crew=1)
+        cart.delete()
+        serialized = OrderSerializer(order,many = True)
+        return Response(serialized.data, status=status.HTTP_200_OK)
+
 
 
 
