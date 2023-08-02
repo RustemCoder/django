@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Cart, MenuItem
+from .models import Cart, MenuItem, Order
 from django.contrib.auth.models import User
 import bleach
 #class BookSerializer(serializers.ModelSerializer):
@@ -43,3 +43,8 @@ class UserSerializer(serializers.ModelSerializer):
         class Meta:
             model = User
             fields = ['id','username','email','first_name','last_name']
+
+class OrderSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Order
+            fields = "__all__"

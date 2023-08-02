@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import MenuItem, Cart, Order
-from .serializers import  MenuItemSerializer,CartItemSerializer,UserSerializer
+from .serializers import  MenuItemSerializer,CartItemSerializer, OrderSerializer,UserSerializer
 from rest_framework import generics
 from rest_framework.renderers import TemplateHTMLRenderer,StaticHTMLRenderer
 from rest_framework.decorators import api_view, renderer_classes, permission_classes
@@ -149,6 +149,14 @@ def cart_management(request):
         serialized = CartItemSerializer(cart)
         return Response(serialized.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+@permission_classes([IsCustomer])
+def customer_orders(request):
+    orders = Order.objects.filter(user = request.user)
+    serialized = OrderSerializer(orders,many = True)
+    return Response(serialized.data,status=status.HTTP_200_OK)
+
 
 
 
