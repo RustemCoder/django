@@ -2,49 +2,56 @@ from rest_framework import serializers
 from .models import Cart, MenuItem, Order
 from django.contrib.auth.models import User
 import bleach
-#class BookSerializer(serializers.ModelSerializer):
-#    class Meta:
- #       model = Book
-#        fields = ['id','title','author','price']
+
+
+class CategorySerializer (serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'title', 'slug']
 
 class MenuItemSerializer(serializers.ModelSerializer):
-    def validate_title(self, value):
-        return bleach.clean(value)
-
-    def validate(self, attrs):
-        attrs['title'] = bleach.clean(attrs['title'])
-        if(attrs['price']<2):
-            raise serializers.ValidationError('Price should not be less than 2.0')
-        return super().validate(attrs)
-    class Meta():
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all()
+    )
+    # category = CategorySerializer(read_only=True)
+    class Meta:
         model = MenuItem
-        fields = ['id','title','price','featured','category']
-        extra_kwargs = {
-            "price":{"min_value":2}, 
-        }
+        fields = ['id', 'title', 'price', 'category', 'featured']
 
-class CartItemSerializer(serializers.ModelSerializer):
-    def validate_title(self, value):
-        return bleach.clean(value)
+
+class CartSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        default=serializers.CurrentUserDefault()
+    )
+
 
     def validate(self, attrs):
-        if(attrs['price']<2):
-            raise serializers.ValidationError('Price should not be less than 2.0')
-        return super().validate(attrs)
-    user = serializers.StringRelatedField()
-    class Meta():
+        attrs['price'] = attrs['quantity'] * attrs['unit_price']
+        return attrs
+
+    class Meta:
         model = Cart
-        fields = "__all__"
+        fields = ['user', 'menuitem', 'unit_price', 'quantity', 'price']
         extra_kwargs = {
-            "price":{"min_value":2}, 
+            'price': {'read_only': True}
         }
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['order', 'menuitem', 'quantity', 'price']
+
+class OrderSerializer(serializers.ModelSerializer):
+
+    orderitem = OrderItemSerializer(many=True, read_only=True, source='order')
+
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'delivery_crew',
+                  'status', 'date', 'total', 'orderitem']
 
 class UserSerializer(serializers.ModelSerializer):
         class Meta:
             model = User
-            fields = ['id','username','email','first_name','last_name']
-
-class OrderSerializer(serializers.ModelSerializer):
-        class Meta:
-            model = Order
-            fields = "__all__"
+            fields = ['id','username','email']
